@@ -1,6 +1,7 @@
 ## https://github.com/GSNCodes/ArUCo-Markers-Pose-Estimation-Generation-Python/blob/main/pose_estimation.py
-
+## https://aliyasineser.medium.com/aruco-marker-tracking-with-opencv-8cb844c26628
 import cv2
+import numpy as np
 
 def find_aruco(img):
     arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
@@ -53,31 +54,64 @@ VideoCap = False
 Video_filename = '~~~.avi'
 cap = cv2.VideoCapture(Video_filename)
 
-while True:
-	if VideoCap:
-		VideoCap, frame = cap.read()
-		fps = cap.get(cv2.CAP_PROP_FPS)
-		delay = round(100 / fps)
-		print("FRAME FPS ; ", int(cap.get(cv2.CAP_PROP_FPS)))
-	else:
-		frame = cv2.imread("abc.jpg")
-		frame2 = cv2.imread("def.jpg")
+ids = []
+corners = []
+rejected = []
+
+camMatrix = 0
+distCoeffs = 0
+markerLength = 0 ## pixel? 60?
+
+objPoints = np.zeros((4, 1, 3), dtype=np.float32)
+objPoints[0, 0] = np.array([-markerLength/2.0, markerLength/2.0, 0], dtype=np.float32)
+objPoints[1, 0] = np.array([markerLength/2.0, markerLength/2.0, 0], dtype=np.float32)
+objPoints[2, 0] = np.array([markerLength/2.0, -markerLength/2.0, 0], dtype=np.float32)
+objPoints[3, 0] = np.array([-markerLength/2.0, -markerLength/2.0, 0], dtype=np.float32)
+
+
+if VideoCap:
+	VideoCap, frame = cap.read()
+	fps = cap.get(cv2.CAP_PROP_FPS)
+	delay = round(100 / fps)
+	print("FRAME FPS ; ", int(cap.get(cv2.CAP_PROP_FPS)))
+else:
+	frame = cv2.imread("abc.jpg")
+	# frame = cv2.imread("def.jpg")
+	frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
+corners, ids, rejected = find_aruco(frame)
+
+detected_markers = aruco_display(corners, ids, rejected, frame)
+nMarkers = len(ids)
+rvecs = [0] * nMarkers
+tvecs = [0] * nMarkers
+
+cv2.namedWindow("image", flags=cv2.WINDOW_KEEPRATIO)
+
+
+# if np.all(ids is not None):  # If there are markers found by detector
+# 	for i in range(0, len(ids)):  # Iterate in markers
+# 		# Estimate pose of each marker and return the values rvec and tvec---different from camera coefficients
+# 		rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[i], 0.02, camMatrix, distCoeffs)
+# 		(rvec - tvec).any()  # get rid of that nasty numpy value array error
+# 		cv2.aruco.drawDetectedMarkers(frame, corners)  # Draw A square around the markers
+# 		cv2.aruco.drawAxis(frame, camMatrix, distCoeffs, rvec, tvec, 0.01)  # Draw Axis
 
 
 
+cv2.imshow("image", detected_markers)
 
-	corner_1, ids_1, rejected_1 = find_aruco(frame)
-	# corner_2, ids_2, rejected_2 = find_aruco(frame2)
+cv2.waitKey(0)
+if cv2.waitKey() == 27:
+	cv2.destroyAllWindows()
 
-	detected_markers = aruco_display(corner_1, ids_1, rejected_1, frame)
-	# detected_markers = aruco_display(corner_2, ids_2, rejected_2, frame2)
-
-	cv2.namedWindow("image", flags=cv2.WINDOW_KEEPRATIO)
-	cv2.imshow("image", detected_markers)
-
-
-	cv2.waitKey(0)
-	if cv2.waitKey() == 27:
-		break
 # cap.release()
-cv2.destroyAllWindows()
+
+# rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 0.02, camMatrix, distCoeffs)
+# (rvec - tvec).any()
+# aruco.drawAxis(frame, matrix_coefficients, distortion_coefficients, rvec, tvec, 0.01)  # Draw Axis
+
+# for i in range(nMarkers):
+# 	rve
+# 	rvecs[i], tvecs[i], markerPoints = cv2.solvePnP(objPoints, np.array(corners[i]), camMatrix, distCoeffs)
