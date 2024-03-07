@@ -1,5 +1,6 @@
 ## https://github.com/GSNCodes/ArUCo-Markers-Pose-Estimation-Generation-Python/blob/main/pose_estimation.py
 ## https://aliyasineser.medium.com/aruco-marker-tracking-with-opencv-8cb844c26628
+# https://github.com/fdcl-gwu/aruco-markers?tab=readme-ov-file
 import cv2
 import numpy as np
 
